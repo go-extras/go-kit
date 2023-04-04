@@ -1,4 +1,7 @@
-// Package must provides a simple way to handle errors by panicking if an error occurs.
+// Package must offers a convenient approach for transforming a two-value function
+// into a single-value function by throwing a panic if an error is returned as the second value
+// in the original function.
+//
 // It should be used sparingly and only in cases where it's unlikely for an error to occur
 // or where the error handling would be identical in every case.
 //
