@@ -25,7 +25,7 @@ func (p *Person) CustomHandler(_ string) (value string, jsonTag string) {
 type PersonNoHandler Person
 
 type PersonCustomTags struct {
-	Person
+	PersonNoHandler
 	Address string `json:"address" customctx:"private"`
 	Custom  string `json:"-" customfn:"CustomHandler"`
 }
@@ -123,7 +123,7 @@ func TestMarshaler_MarshalJSON(t *testing.T) {
 
 func TestMarshaler_MarshalJSON_CustomTags(t *testing.T) {
 	person := PersonCustomTags{
-		Person: Person{
+		PersonNoHandler: PersonNoHandler{
 			Name: "John",
 			Age:  30,
 		},
@@ -131,7 +131,7 @@ func TestMarshaler_MarshalJSON_CustomTags(t *testing.T) {
 	}
 
 	// Create a new Marshaler with the person object and the context "public".
-	marshaler := contextualjson.NewMarshaler(person, "public")
+	marshaler := contextualjson.NewMarshaler(person, "public", contextualjson.WithMarshalContextTag("customctx"), contextualjson.WithMarshalHandlerTag("customfn"))
 
 	// Serialize the marshaler object and verify the result.
 	data, err := json.Marshal(marshaler)
@@ -141,8 +141,10 @@ func TestMarshaler_MarshalJSON_CustomTags(t *testing.T) {
 
 	// Verify that the data only contains the "name" and "age" fields.
 	var expectedData = map[string]any{
-		"name": person.Name,
-		"age":  person.Age,
+		"address":     "", // side effect of embedding (the embedded struct has different tags)
+		"name":        person.Name,
+		"age":         person.Age,
+		"custom_name": "custom value",
 	}
 	expectedDataJSON, _ := json.Marshal(expectedData)
 	expectedDataLines := strings.Split(string(expectedDataJSON), "\n")

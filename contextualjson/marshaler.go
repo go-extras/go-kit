@@ -1,6 +1,6 @@
 // Package contextualjson provides a JSON marshaler that allows specifying a context for the serialization of struct fields.
 //
-// To use, create a Marshaler instance with the data to be serialized, a context string, and any options (e.g., context tag, marshaler tag).
+// To use, create a Marshaler instance with the data to be serialized, a context string, and any options (e.g., marshalcontext tag, marshalhandler tag).
 // Then call MarshalJSON on the Marshaler instance to serialize the data with the given context.
 //
 // Example usage:
@@ -13,11 +13,11 @@
 //
 //	// serialize only the Name and Age fields
 //	m := NewMarshaler(Person{Name: "Alice", Age: 30, Password: "password"}, "user")
-//	bytes, err := m.MarshalJSON()
+//	bytes, err := json.Marshal(m)
 //
 //	// serialize all fields, including Password (only when context is "admin")
 //	m = NewMarshaler(Person{Name: "Alice", Age: 30, Password: "password"}, "admin")
-//	bytes, err = m.MarshalJSON()
+//	bytes, err = json.Marshal(m)
 //
 // License: MIT
 // Copyright: 2023, Denis Voytyuk
@@ -31,8 +31,8 @@ import (
 )
 
 const (
-	defaultMarshalHandlerTag = "marshalhandler"
 	defaultMarshalContextTag = "marshalcontext"
+	defaultMarshalHandlerTag = "marshalhandler"
 )
 
 // MarshalerOption is a functional option type for configuring a Marshaler instance.
@@ -96,53 +96,9 @@ func MarshalJSONWithContext(data any, context, contextTag, handlerTag string) ([
 	case reflect.Struct:
 		fields := make(map[string]any)
 		for i := 0; i < value.NumField(); i++ {
-			field := value.Type().Field(i)
-			fieldValue := value.Field(i).Interface()
-			marshalCtx := field.Tag.Get(contextTag)
-			if marshalCtx == "" || marshalCtx == context {
-				jsonTag := field.Tag.Get("json")
-				if jsonTag == "" {
-					jsonTag = strings.ToLower(field.Name)
-				}
-				handlerVal := field.Tag.Get(handlerTag)
-				if handlerVal != "" {
-					handlerName, newFieldName := parseCtxHandlerTag(handlerVal)
-
-					// Value can be a pointer to a struct or a struct.
-					// Value can have a method with a pointer receiver or a value receiver.
-					// Attempt to find a method with a pointer receiver first.
-					// Then attempt to find a method with a value receiver.
-					// If both fail, return an error.
-
-					handlerFunc := findHandlerFunc(value, handlerName)
-					if handlerFunc.IsValid() { // first, check if we have the function
-						if !isHandlerFuncValid(handlerFunc) { // then check if it's valid
-							return nil, fmt.Errorf("invalid handler func signature, must be func(marshalCtx string) (value any, jsonTag string) OR func(marshalCtx string) (value any)")
-						}
-
-						handlerResult := handlerFunc.Call([]reflect.Value{contextValue})
-						fieldValue = handlerResult[0].Interface()
-						if newFieldName != "" {
-							jsonTag = newFieldName
-						}
-						if len(handlerResult) > 1 {
-							var ok bool
-							// take jsonTag from the second return value
-							if !handlerResult[1].CanInterface() {
-								return nil, fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1])
-							}
-							jsonTag, ok = handlerResult[1].Interface().(string)
-							if !ok {
-								return nil, fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1].Interface())
-							}
-						}
-					} else if newFieldName != "" {
-						jsonTag = newFieldName
-					}
-				}
-				if jsonTag != "-" {
-					fields[jsonTag] = fieldValue
-				}
+			err = processFields(value, contextValue, i, context, contextTag, handlerTag, fields)
+			if err != nil {
+				return nil, err
 			}
 		}
 		return json.Marshal(fields)
@@ -171,6 +127,70 @@ func MarshalJSONWithContext(data any, context, contextTag, handlerTag string) ([
 	default:
 		return json.Marshal(data)
 	}
+}
+
+func processFields(value, contextValue reflect.Value, i int, context, contextTag, handlerTag string, fields map[string]any) error {
+	field := value.Type().Field(i)
+	if field.Anonymous {
+		// iterate over the embedded struct's fields
+		for j := 0; j < value.Field(i).NumField(); j++ {
+			err := processFields(value.Field(i), contextValue, j, context, contextTag, handlerTag, fields)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	fieldValue := value.Field(i).Interface()
+	marshalCtx := field.Tag.Get(contextTag)
+	if marshalCtx == "" || marshalCtx == context {
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" {
+			jsonTag = strings.ToLower(field.Name)
+		}
+		handlerVal := field.Tag.Get(handlerTag)
+		if handlerVal != "" {
+			handlerName, newFieldName := parseCtxHandlerTag(handlerVal)
+
+			// Value can be a pointer to a struct or a struct.
+			// Value can have a method with a pointer receiver or a value receiver.
+			// Attempt to find a method with a pointer receiver first.
+			// Then attempt to find a method with a value receiver.
+			// If both fail, return an error.
+
+			handlerFunc := findHandlerFunc(value, handlerName)
+			if handlerFunc.IsValid() { // first, check if we have the function
+				if !isHandlerFuncValid(handlerFunc) { // then check if it's valid
+					return fmt.Errorf("invalid handler func signature, must be func(marshalCtx string) (value any, jsonTag string) OR func(marshalCtx string) (value any)")
+				}
+
+				handlerResult := handlerFunc.Call([]reflect.Value{contextValue})
+				fieldValue = handlerResult[0].Interface()
+				if newFieldName != "" {
+					jsonTag = newFieldName
+				}
+				if len(handlerResult) > 1 {
+					var ok bool
+					// take jsonTag from the second return value
+					if !handlerResult[1].CanInterface() {
+						return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1])
+					}
+					jsonTag, ok = handlerResult[1].Interface().(string)
+					if !ok {
+						return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1].Interface())
+					}
+				}
+			} else if newFieldName != "" {
+				jsonTag = newFieldName
+			}
+		}
+		if jsonTag != "-" {
+			fields[jsonTag] = fieldValue
+		}
+	}
+
+	return nil
 }
 
 func parseCtxHandlerTag(tag string) (handlerName, newFieldName string) {

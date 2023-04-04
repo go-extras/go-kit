@@ -7,8 +7,10 @@ It contains various packages and utilities that can be used to simplify Go progr
 
 ## Features
 - Package `must` offers a convenient approach for transforming a two-value function
- into a single-value function by throwing a panic if an error is returned as the second value
- in the original function.
+  into a single-value function by throwing a panic if an error is returned as the second value
+  in the original function.
+- Package `contextualjson` provides a JSON marshaler that allows specifying a context
+  and custom handlers for the serialization of struct fields.
 
 ## Installation
 To use this module in your Go project, simply run the following command:
