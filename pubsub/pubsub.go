@@ -9,7 +9,7 @@
 //
 // Example usage:
 // // Create a new publisher with a buffer of 10 messages and a custom logger
-// p := pubsub.NewPublisher(10, pubsub.WithLogger(myLogger))
+// p := pubsub.NewPublisher[string](10, pubsub.WithLogger[string](myLogger))
 //
 // Then, to subscribe to messages from the publisher, call the Subscribe method
 // on the Publisher instance:
