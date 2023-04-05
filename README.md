@@ -12,6 +12,7 @@ It contains various packages and utilities that can be used to simplify Go progr
 - Package `contextualjson` provides a JSON marshaler that allows specifying a context
   and custom handlers for the serialization of struct fields.
 - Package `logger` provides interfaces for logging with various levels of verbosity and functionality.
+- Package `pubsub` provides provides a simple publish-subscribe messaging system.
 
 ## Installation
 To use this module in your Go project, simply run the following command:
