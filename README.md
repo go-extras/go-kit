@@ -6,12 +6,13 @@ This is a Go module that provides additional functionality to the standard libra
 It contains various packages and utilities that can be used to simplify Go programming.
 
 ## Features
-- Package `must` offers a convenient approach for transforming a two-value function
-  into a single-value function by throwing a panic if an error is returned as the second value
-  in the original function.
+- Package `clone` provides functionality to clone the data.
 - Package `contextualjson` provides a JSON marshaler that allows specifying a context
   and custom handlers for the serialization of struct fields.
 - Package `logger` provides interfaces for logging with various levels of verbosity and functionality.
+- Package `must` offers a convenient approach for transforming a two-value function
+  into a single-value function by throwing a panic if an error is returned as the second value
+  in the original function.
 - Package `pubsub` provides provides a simple publish-subscribe messaging system.
 
 ## Installation
