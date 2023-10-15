@@ -1,4 +1,5 @@
 // Package logger provides interfaces for logging with various levels of verbosity and functionality.
+// It also provides a convenient (but experimental) way of migrating from logrus to slog.
 //
 // License: MIT
 // Copyright: 2023, Denis Voytyuk
