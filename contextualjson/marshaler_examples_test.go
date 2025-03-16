@@ -15,7 +15,7 @@ type User struct {
 	LastName  string `json:"last_name" marshalhandler:"FullName"`
 }
 
-func (u User) FullName(_ string) (string, string) {
+func (u User) FullName(_ string) (value, jsonTag string) {
 	return u.FirstName + " " + u.LastName, "full_name"
 }
 

@@ -144,50 +144,75 @@ func processFields(value, contextValue reflect.Value, i int, context, contextTag
 
 	fieldValue := value.Field(i).Interface()
 	marshalCtx := field.Tag.Get(contextTag)
-	if marshalCtx == "" || marshalCtx == context {
-		jsonTag := field.Tag.Get("json")
-		if jsonTag == "" {
-			jsonTag = strings.ToLower(field.Name)
-		}
-		handlerVal := field.Tag.Get(handlerTag)
-		if handlerVal != "" {
-			handlerName, newFieldName := parseCtxHandlerTag(handlerVal)
+	if marshalCtx != "" && marshalCtx != context {
+		return nil
+	}
 
-			// Value can be a pointer to a struct or a struct.
-			// Value can have a method with a pointer receiver or a value receiver.
-			// Attempt to find a method with a pointer receiver first.
-			// Then attempt to find a method with a value receiver.
-			// If both fail, return an error.
+	jsonTag := field.Tag.Get("json")
+	if jsonTag == "" {
+		jsonTag = strings.ToLower(field.Name)
+	}
 
-			handlerFunc := findHandlerFunc(value, handlerName)
-			if handlerFunc.IsValid() { // first, check if we have the function
-				if !isHandlerFuncValid(handlerFunc) { // then check if it's valid
-					return fmt.Errorf("invalid handler func signature, must be func(marshalCtx string) (value any, jsonTag string) OR func(marshalCtx string) (value any)")
-				}
+	err := maybeGetJSONTagFromHandler(field, handlerTag, value, contextValue, &fieldValue, &jsonTag)
+	if err != nil {
+		return err
+	}
 
-				handlerResult := handlerFunc.Call([]reflect.Value{contextValue})
-				fieldValue = handlerResult[0].Interface()
-				if newFieldName != "" {
-					jsonTag = newFieldName
-				}
-				if len(handlerResult) > 1 {
-					var ok bool
-					// take jsonTag from the second return value
-					if !handlerResult[1].CanInterface() {
-						return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1])
-					}
-					jsonTag, ok = handlerResult[1].Interface().(string)
-					if !ok {
-						return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1].Interface())
-					}
-				}
-			} else if newFieldName != "" {
-				jsonTag = newFieldName
-			}
+	if jsonTag != "-" {
+		fields[jsonTag] = fieldValue
+	}
+
+	return nil
+}
+
+func maybeGetJSONTagFromHandler(field reflect.StructField, handlerTag string, value, contextValue reflect.Value, fieldValue *any, jsonTag *string) error {
+	if handlerVal := field.Tag.Get(handlerTag); handlerVal != "" {
+		handlerName, newFieldName := parseCtxHandlerTag(handlerVal)
+		err := getJSONTagFromHandler(value, contextValue, newFieldName, handlerName, fieldValue, jsonTag)
+		if err != nil {
+			return err
 		}
-		if jsonTag != "-" {
-			fields[jsonTag] = fieldValue
+	}
+	return nil
+}
+
+func getJSONTagFromHandler(value, contextValue reflect.Value, newFieldName, handlerName string, fieldValue *any, jsonTag *string) error {
+	// Value can be a pointer to a struct or a struct.
+	// Value can have a method with a pointer receiver or a value receiver.
+	// Attempt to find a method with a pointer receiver first.
+	// Then attempt to find a method with a value receiver.
+	// If both fail, return an error.
+
+	handlerFunc := findHandlerFunc(value, handlerName)
+	if handlerFunc.IsValid() { // first, check if we have the function
+		if !isHandlerFuncValid(handlerFunc) { // then check if it's valid
+			return fmt.Errorf("invalid handler func signature, must be func(marshalCtx string) (value any, jsonTag string) OR func(marshalCtx string) (value any)")
 		}
+
+		handlerResult := handlerFunc.Call([]reflect.Value{contextValue})
+		*fieldValue = handlerResult[0].Interface()
+		if newFieldName != "" {
+			*jsonTag = newFieldName
+		}
+		if len(handlerResult) <= 1 {
+			return nil
+		}
+
+		var ok bool
+		// take jsonTag from the second return value
+		if !handlerResult[1].CanInterface() {
+			return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1])
+		}
+		*jsonTag, ok = handlerResult[1].Interface().(string)
+		if !ok {
+			return fmt.Errorf("invalid json tag returned by handler %+v", handlerResult[1].Interface())
+		}
+
+		return nil
+	}
+
+	if newFieldName != "" {
+		*jsonTag = newFieldName
 	}
 
 	return nil

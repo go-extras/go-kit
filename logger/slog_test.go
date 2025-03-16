@@ -15,7 +15,7 @@ func TestPrintf(t *testing.T) {
 
 	var b bytes.Buffer
 	h := slog.NewTextHandler(&b, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_groups []string, a slog.Attr) slog.Attr {
 			if a.Key == "time" {
 				return slog.Attr{
 					Key:   "time",
@@ -37,7 +37,7 @@ func TestWithFields(t *testing.T) {
 
 	var b bytes.Buffer
 	h := slog.NewTextHandler(&b, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_groups []string, a slog.Attr) slog.Attr {
 			if a.Key == "time" {
 				return slog.Attr{
 					Key:   "time",
@@ -59,7 +59,7 @@ func TestWithField(t *testing.T) {
 
 	var b bytes.Buffer
 	h := slog.NewTextHandler(&b, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_groups []string, a slog.Attr) slog.Attr {
 			if a.Key == "time" {
 				return slog.Attr{
 					Key:   "time",
