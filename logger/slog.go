@@ -17,9 +17,9 @@ const SlogLevelFatal slog.Level = 100
 
 var _ FieldLogger[[]any, *Slog] = (*Slog)(nil)
 
-func NewSlog(slog *slog.Logger) *Slog {
+func NewSlog(logger *slog.Logger) *Slog {
 	return &Slog{
-		Logger: slog,
+		Logger: logger,
 	}
 }
 
@@ -69,7 +69,7 @@ func (s *Slog) Fatalf(format string, args ...any) {
 		SlogLevelFatal,
 		fmt.Sprintf(format, args...),
 	)
-	os.Exit(1)
+	os.Exit(1) //revive:disable-line:deep-exit intentionally not handled
 }
 
 func (s *Slog) Panicf(format string, args ...any) {
@@ -88,7 +88,7 @@ func (s *Slog) Fatal(args ...any) {
 		SlogLevelFatal,
 		fmt.Sprint(args...),
 	)
-	os.Exit(1)
+	os.Exit(1) //revive:disable-line:deep-exit intentionally not handled
 }
 
 func (s *Slog) Panic(args ...any) {
@@ -200,7 +200,7 @@ func (s *Slog) WithError(err error) *Slog {
 }
 
 // SlogFields is a helper function that converts a list of key-value pairs to a slice of them.
-// Use this function in conjuction with WithFields to pass a slice of key-value pairs to it.
+// Use this function in conjunction with WithFields to pass a slice of key-value pairs to it.
 func SlogFields(args ...any) []any {
 	return args
 }
@@ -227,7 +227,7 @@ func Fatalf(format string, args ...any) {
 		SlogLevelFatal,
 		fmt.Sprintf(format, args...),
 	)
-	os.Exit(1)
+	os.Exit(1) //revive:disable-line:deep-exit intentionally not handled
 }
 
 func Panicf(format string, args ...any) {
@@ -246,7 +246,7 @@ func Fatal(args ...any) {
 		SlogLevelFatal,
 		fmt.Sprint(args...),
 	)
-	os.Exit(1)
+	os.Exit(1) //revive:disable-line:deep-exit intentionally not handled
 }
 
 func Panic(args ...any) {

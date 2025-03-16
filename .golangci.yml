@@ -173,8 +173,8 @@ linters-settings:
         disabled: false
       - name: redundant-import-alias
         disabled: false
-      - name: redundant-build-tag
-        disabled: false
+      #- name: redundant-build-tag # not supported in golangci-lint
+      #  disabled: false
       - name: string-of-int
         disabled: false
       - name: struct-tag
@@ -221,6 +221,15 @@ linters-settings:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-rules:
+    - path: _test\.go$
+      linters:
+        - funlen
+        - gocognit
+        - gocritic
+        - gocyclo
+        - lll
+        - nestif
 
 run:
   concurrency: 8

@@ -17,7 +17,7 @@ type Person struct {
 	Custom  string `json:"-" marshalhandler:"CustomHandler"`
 }
 
-func (p *Person) CustomHandler(_ string) (value string, jsonTag string) {
+func (*Person) CustomHandler(_ string) (value, jsonTag string) {
 	// custom handling logic goes here
 	return "custom value", "custom_name"
 }
@@ -30,7 +30,7 @@ type PersonCustomTags struct {
 	Custom  string `json:"-" customfn:"CustomHandler"`
 }
 
-func (p *PersonCustomTags) CustomHandler(_ string) (value string, jsonTag string) {
+func (*PersonCustomTags) CustomHandler(_ string) (value, jsonTag string) {
 	// custom handling logic goes here
 	return "custom value", "custom_name"
 }
