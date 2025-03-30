@@ -138,8 +138,6 @@ linters:
           disabled: false
         - name: if-return
           disabled: false
-        - name: indent-error-flow
-          disabled: false
         - name: import-alias-naming
           arguments:
             - # require aliases to be lowercased alphanumeric values (the first symbol is always a letter)
