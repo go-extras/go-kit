@@ -124,7 +124,7 @@ linters:
           disabled: false
         - name: filename-format
           arguments:
-            - ^[_a-z][_a-z0-9]*.go$
+            - "^[_a-z][_a-z0-9]*.go$"
           disabled: false
         - name: flag-parameter
           disabled: false
@@ -141,9 +141,9 @@ linters:
         - name: import-alias-naming
           arguments:
             - # require aliases to be lowercased alphanumeric values (the first symbol is always a letter)
-              allowRegex: ^[a-z][a-z0-9]*$
+              allowRegex: "^[a-z][a-z0-9]*$"
               # disallow v1 (or vN, where N is a number) prefixes
-              denyRegex: ^v\d+$
+              denyRegex: "^v\d+$"
           disabled: false
         - name: import-shadowing
           disabled: false
@@ -229,11 +229,11 @@ linters:
           - gocyclo
           - lll
           - nestif
-        path: _test\.go$
+        path: "_test\.go$"
     paths:
-      - third_party$
-      - builtin$
-      - examples$
+      - "third_party$"
+      - "builtin$"
+      - "examples$"
 
 issues:
   max-issues-per-linter: 0
@@ -252,6 +252,6 @@ formatters:
   exclusions:
     generated: lax
     paths:
-      - third_party$
-      - builtin$
-      - examples$
+      - "third_party$"
+      - "builtin$"
+      - "examples$"
