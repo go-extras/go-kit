@@ -13,6 +13,7 @@ It contains various packages and utilities that can be used to simplify Go progr
 - Package `must` offers a convenient approach for transforming a two-value function
   into a single-value function by throwing a panic if an error is returned as the second value
   in the original function.
+- Package `ptr` provides utility functions for working with pointers in Go.
 - Package `pubsub` provides provides a simple publish-subscribe messaging system.
 
 ## Installation
